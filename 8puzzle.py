@@ -1,126 +1,137 @@
-from heapq import heappush, heappop
-from random import shuffle
-import time
+def find_index_0(num):
+	if len(str(num))==8:
+		return 0
+	for i in range(9):
+		x = num % 10
+		num = int(num/10)
+		if x==0:
+			break
+	return 8-i
+	
+def swap(strr, a, b):
+	t = list(strr)
+	temp = t[a]
+	t[a] = t[b]
+	t[b] = temp
+	
+	return ''.join(t)
+
+def make_move(num):
+	ind = find_index_0(num)
+	operate = str(num)
+	moved_list = []
+	if len(operate)==8:
+		operate = '0' + operate
+	if ind==0:
+		final = swap(operate, ind, 1)			
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 3)
+		moved_list.append([int(final),num])	
+	elif ind==1:
+		final = swap(operate, ind, 0)		
+		final = final[1:]
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 2)
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 4)
+		moved_list.append([int(final),num])
+	elif ind==2:
+		final = swap(operate, ind, 1)			
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 5)
+		moved_list.append([int(final),num])
+	elif ind==3:
+		final = swap(operate, ind, 0)			
+		final = final[1:]
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 4)
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 6)
+		moved_list.append([int(final),num])
+	elif ind==4:
+		final = swap(operate, ind, 1)			
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 3)
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 5)
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 7)
+		moved_list.append([int(final),num])
+	elif ind==5:
+		final = swap(operate, ind, 2)			
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 4)
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 8)
+		moved_list.append([int(final),num])
+	elif ind==6:
+		final = swap(operate, ind, 3)		
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 7)
+		moved_list.append([int(final),num])
+	elif ind==7:
+		final = swap(operate, ind, 4)		
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 6)
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 8)
+		moved_list.append([int(final),num])
+	elif ind==8:
+		final = swap(operate, ind, 5)			
+		moved_list.append([int(final),num])
+		
+		final = swap(operate, ind, 7)
+		moved_list.append([int(final),num])
+
+	return moved_list
 
 
-class Solver:
-  def __init__(self, initial_state=None):
-    self.initial_state = State(initial_state)
-    self.goal = range(1, 9)
+print("\nEnter a 9 digit number showing the orientation of the game (row wise)")
+number = int(input())
 
-  def _rebuildPath(self, end):
-    path = [end]
-    state = end.parent
-    while state.parent:
-      path.append(state)
-      state = state.parent
-    return path
+Q = []								
+Q.append([number,111111111])		
 
-  def solve(self):
-    openset = PriorityQueue()
-    openset.add(self.initial_state)
-    closed = set()
-    moves = 0
-    print 'tentando resolver:'
-    print openset.peek(), '\n\n'
-    start = time.time()
-    while openset:
-      current = openset.poll()
-      if current.values[:-1] == self.goal:
-        end = time.time()
-        print 'achei uma solução'
-        path = self._rebuildPath(current)
-        for state in reversed(path):
-          print state
-          print
-        print 'resolvido com %d movimentos' % len(path)
-        print 'encontrei a solução em %2.f segundos' % float(end - start)
-        break
-      moves += 1
-      for state in current.possible_moves(moves):
-        if state not in closed:
-          openset.add(state)
-      closed.add(current)
-    else:
-      print 'não consegui solucionar!'
+moves = 0							
+nodes = 0							
+last = number
 
-
-class State:
-  def __init__(self, values, moves=0, parent=None):
-    self.values = values
-    self.moves = moves
-    self.parent = parent
-    self.goal = range(1, 9)
-  
-  def possible_moves(self, moves):
-    i = self.values.index(0)
-    if i in [3, 4, 5, 6, 7, 8]:
-      new_board = self.values[:]
-      new_board[i], new_board[i - 3] = new_board[i - 3], new_board[i]
-      yield State(new_board, moves, self)
-    if i in [1, 2, 4, 5, 7, 8]:
-      new_board = self.values[:]
-      new_board[i], new_board[i - 1] = new_board[i - 1], new_board[i]
-      yield State(new_board, moves, self)
-    if i in [0, 1, 3, 4, 6, 7]:
-      new_board = self.values[:]
-      new_board[i], new_board[i + 1] = new_board[i + 1], new_board[i]
-      yield State(new_board, moves, self)
-    if i in [0, 1, 2, 3, 4, 5]:
-      new_board = self.values[:]
-      new_board[i], new_board[i + 3] = new_board[i + 3], new_board[i]
-      yield State(new_board, moves, self)
-
-  def score(self):
-    return self._h() + self._g()
-
-  def _h(self):
-    return sum([1 if self.values[i] != self.goal[i] else 0 for i in xrange(8)])
-
-  def _g(self):
-    return self.moves
-
-  def __cmp__(self, other):
-    return self.values == other.values
-
-  def __eq__(self, other):
-    return self.__cmp__(other)
-
-  def __hash__(self):
-    return hash(str(self.values))
-
-  def __lt__(self, other):
-    return self.score() < other.score()
-
-  def __str__(self):
-    return '\n'.join([str(self.values[:3]),
-        str(self.values[3:6]),
-        str(self.values[6:9])]).replace('[', '').replace(']', '').replace(',', '').replace('0', 'x')
-
-class PriorityQueue:
-  def __init__(self):
-    self.pq = []
-
-  def add(self, item):
-    heappush(self.pq, item)
-
-  def poll(self):
-    return heappop(self.pq)
-
-  def peek(self):
-    return self.pq[0]
-
-  def remove(self, item):
-    value = self.pq.remove(item)
-    heapify(self.pq)
-    return value is not None
-
-  def __len__(self):
-    return len(self.pq)
-
-
-puzzle = range(9)
-shuffle(puzzle)
-#puzzle = [1, 7, 4, 6, 8, 3, 2, 5, 0]
-solver = Solver(puzzle)
-solver.solve()
+while Q:
+	x = Q.pop(0)					
+	
+	nodes+=1
+	
+	if x[0]==last:
+		moves+=1
+	
+	listing = make_move(x[0])		
+	
+	for i in listing:				
+		if i[0]==x[1]:
+			listing.remove(i)
+			break
+	
+	if listing[len(listing)-1][1]==last:			
+		last = 	listing[len(listing)-1][0]	
+	
+	for i in listing:
+		if i[0] == 123456780:						
+			print("Number of moves - " + str(moves+1))
+			print("Number of nodes - " + str(nodes))
+			print("Solution Found!")
+			exit(0)
+		Q.append(i)	
